@@ -109,11 +109,16 @@ public class Problem {
         if (tile.candidates().size() == 1) {
             throw new SudokuStateException("Removing last candidate from tile!", tile);
         }
-        getMutator(tile).removeCandidate(exCandidate);
+//        if ("G".equals(exCandidate.getDescription()) && tile.description().matches("\\[\\d{1,2},48]")) {
+//            System.out.println("Oh shit not again ...");
+//        }
         for (TileSet set : getBoard().setsAt(tile)) {
             if (set.candidatesForValue(exCandidate).size() == 1) {
                 throw new SudokuStateException("Removing last candidate tile for value from tile set!", tile);
             }
+        }
+        getMutator(tile).removeCandidate(exCandidate);
+        for (TileSet set : getBoard().setsAt(tile)) {
             getMutator(set).removeCandidate(tile, exCandidate);
         }
     }

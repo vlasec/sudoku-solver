@@ -96,9 +96,9 @@ public class TileSet extends AbstractSet<Tile> {
         /**
          * @return true if this TileSet type can have an intersection larger than 1 tile with the other type.
          */
-        boolean canIntersectWith(TileSetType otherType);
+        boolean canIntersectWith(TileSetType other);
 
-        boolean isPerpendicularTo(TileSetType otherType);
+        boolean isPerpendicularTo(TileSetType other);
     }
 
     public static class TileSetMutator {

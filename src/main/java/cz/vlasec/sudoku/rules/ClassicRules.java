@@ -4,6 +4,7 @@ import cz.vlasec.sudoku.core.board.Rules;
 import cz.vlasec.sudoku.core.board.Tile;
 import cz.vlasec.sudoku.core.board.TileSet;
 import cz.vlasec.sudoku.core.board.TileSet.TileSetMutator;
+import cz.vlasec.sudoku.core.board.TileSet.TileSetType;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,7 +34,14 @@ public class ClassicRules extends Rules {
 
     @Override
     public List<TileSetMutator> sets(Tile[][] grid) {
-        List<TileSetMutator> result = new ArrayList<>();
+        List<TileSetMutator> result = new ArrayList<>(size * 3);
+        prepareRowsAndCols(result, grid, ClassicSetTypes.ROW, ClassicSetTypes.COLUMN);
+        prepareCells(result, grid, ClassicSetTypes.COLUMN);
+
+        return result;
+    }
+
+    protected void prepareRowsAndCols(List<TileSetMutator> output, Tile[][] grid, TileSetType rowType, TileSetType colType) {
         for (int i = 0; i < size; i++) {
             Set<Tile> row = new HashSet<>();
             Set<Tile> col = new HashSet<>();
@@ -41,9 +49,12 @@ public class ClassicRules extends Rules {
                 row.add(grid[i][j]);
                 col.add(grid[j][i]);
             }
-            result.add(createTileSet(row, ClassicSetTypes.ROW));
-            result.add(createTileSet(col, ClassicSetTypes.COLUMN));
+            output.add(createTileSet(row, rowType));
+            output.add(createTileSet(col, colType));
         }
+    }
+
+    protected void prepareCells(List<TileSetMutator> output, Tile[][] grid, TileSetType cellType) {
         for (int cellX = 0; cellX < cellYSize; cellX++) {
             for (int cellY = 0; cellY < cellXSize; cellY++) {
                 Set<Tile> cell = new HashSet<>();
@@ -52,11 +63,9 @@ public class ClassicRules extends Rules {
                         cell.add(grid[cellX * cellXSize + x][cellY * cellYSize + y]);
                     }
                 }
-                result.add(createTileSet(cell, ClassicSetTypes.CELL));
+                output.add(createTileSet(cell, cellType));
             }
         }
-
-        return result;
     }
 
     public int size() {
@@ -112,28 +121,28 @@ public class ClassicRules extends Rules {
                 .collect(Collectors.toList());
     }
 
-    private enum ClassicSetTypes implements TileSet.TileSetType {
+    private enum ClassicSetTypes implements TileSetType {
         ROW {
-            public boolean canIntersectWith(TileSet.TileSetType otherType) {
-                return CELL == otherType;
+            public boolean canIntersectWith(TileSetType other) {
+                return CELL == other;
             }
-            public boolean isPerpendicularTo(TileSet.TileSetType otherType) {
-                return COLUMN == otherType;
+            public boolean isPerpendicularTo(TileSetType other) {
+                return COLUMN == other;
             }
         },
         COLUMN {
-            public boolean canIntersectWith(TileSet.TileSetType otherType) {
-                return CELL == otherType;
+            public boolean canIntersectWith(TileSetType other) {
+                return CELL == other;
             }
-            public boolean isPerpendicularTo(TileSet.TileSetType otherType) {
-                return ROW == otherType;
+            public boolean isPerpendicularTo(TileSetType other) {
+                return ROW == other;
             }
         },
         CELL {
-            public boolean canIntersectWith(TileSet.TileSetType otherType) {
-                return CELL != otherType;
+            public boolean canIntersectWith(TileSetType other) {
+                return CELL != other;
             }
-            public boolean isPerpendicularTo(TileSet.TileSetType otherType) {
+            public boolean isPerpendicularTo(TileSetType other) {
                 return false;
             }
         },

@@ -1,7 +1,6 @@
 package cz.vlasec.sudoku.solvers;
 
 import cz.vlasec.sudoku.core.SudokuException;
-import cz.vlasec.sudoku.core.SudokuStateException;
 import cz.vlasec.sudoku.core.board.*;
 import cz.vlasec.sudoku.core.board.Rules.Value;
 import cz.vlasec.sudoku.core.solver.Reaction;
@@ -10,18 +9,19 @@ import cz.vlasec.sudoku.core.solver.SolverCallback;
 import cz.vlasec.sudoku.core.solver.Sweep;
 import cz.vlasec.sudoku.solvers.reaction.BasicTileReaction;
 import cz.vlasec.sudoku.solvers.reaction.LastInSetReaction;
-import cz.vlasec.sudoku.solvers.reaction.SetIntersectionReaction;
 import cz.vlasec.sudoku.solvers.sweep.HiddenPairSweep;
 import cz.vlasec.sudoku.solvers.sweep.NakedPairSweep;
 import cz.vlasec.sudoku.solvers.sweep.SetIntersectionSweep;
 
 import java.util.*;
 
+/**
+ * Can solve classic rules and some minor modifications of it that don't add anything too special.
+ */
 public class ClassicSolver implements Solver {
     public static List<Reaction> REACTIONS = Collections.unmodifiableList(Arrays.asList(new Reaction[]{
             new BasicTileReaction(),
             new LastInSetReaction(),
-            new SetIntersectionReaction(),
     }));
     public static List<Sweep> SWEEPS = Collections.unmodifiableList(Arrays.asList(new Sweep[]{
             new SetIntersectionSweep(),

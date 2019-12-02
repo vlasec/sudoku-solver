@@ -4,26 +4,26 @@ import cz.vlasec.sudoku.core.board.TileSet;
 
 public enum TestTileSetTypes implements TileSet.TileSetType {
     ROW {
-        public boolean canIntersectWith(TileSet.TileSetType otherType) {
-            return CELL == otherType;
+        public boolean canIntersectWith(TileSet.TileSetType other) {
+            return CELL == other;
         }
-        public boolean isPerpendicularTo(TileSet.TileSetType otherType) {
-            return COLUMN == otherType;
+        public boolean isPerpendicularTo(TileSet.TileSetType other) {
+            return COLUMN == other;
         }
     },
     COLUMN {
-        public boolean canIntersectWith(TileSet.TileSetType otherType) {
-            return CELL == otherType;
+        public boolean canIntersectWith(TileSet.TileSetType other) {
+            return CELL == other;
         }
-        public boolean isPerpendicularTo(TileSet.TileSetType otherType) {
-            return ROW == otherType;
+        public boolean isPerpendicularTo(TileSet.TileSetType other) {
+            return ROW == other;
         }
     },
     CELL {
-        public boolean canIntersectWith(TileSet.TileSetType otherType) {
-            return CELL != otherType;
+        public boolean canIntersectWith(TileSet.TileSetType other) {
+            return CELL != other;
         }
-        public boolean isPerpendicularTo(TileSet.TileSetType otherType) {
+        public boolean isPerpendicularTo(TileSet.TileSetType other) {
             return false;
         }
     },
