@@ -16,6 +16,7 @@ import static cz.vlasec.sudoku.solvers.utils.CandidateHelper.hasCandidate;
  * A bit more complex reaction.
  * If the candidate that has been ruled out is only a candidate in an intersection with some other tile set,
  * then the other tile set can also only contain the candidate in the intersection (and not anywhere else).
+ * @deprecated reactions are supposed to be called very often and this is quite resource intensive.
  */
 @Deprecated // a bit too complex for a reaction.
 public class SetIntersectionReaction implements Reaction {

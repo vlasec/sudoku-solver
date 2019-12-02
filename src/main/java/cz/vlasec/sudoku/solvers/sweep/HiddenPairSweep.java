@@ -1,12 +1,14 @@
 package cz.vlasec.sudoku.solvers.sweep;
 
 import cz.vlasec.sudoku.core.board.Board;
+import cz.vlasec.sudoku.core.board.Rules;
 import cz.vlasec.sudoku.core.board.Rules.Value;
 import cz.vlasec.sudoku.core.board.Tile;
 import cz.vlasec.sudoku.core.board.TileSet;
 import cz.vlasec.sudoku.core.solver.SolverCallback;
 import cz.vlasec.sudoku.core.solver.Sweep;
 import cz.vlasec.sudoku.core.solver.SweepRequest;
+import cz.vlasec.sudoku.solvers.utils.Cycle;
 
 import java.util.*;
 
@@ -36,7 +38,7 @@ public class HiddenPairSweep implements Sweep {
      */
     private void findAndClearPairsOrCycles(SweepRequest request, LinkedList<Pair> pairs) {
         while (!pairs.isEmpty()) {
-            Cycle cycle = new Cycle(pairs.removeFirst());
+            TileCycle cycle = new TileCycle(pairs.removeFirst());
             while(true) {
                 boolean added = false;
                 for (Iterator<Pair> iterator = pairs.iterator(); iterator.hasNext(); ) {
@@ -57,7 +59,7 @@ public class HiddenPairSweep implements Sweep {
         }
     }
 
-    private void clearForCycle(SweepRequest request, Cycle cycle) {
+    private void clearForCycle(SweepRequest request, TileCycle cycle) {
         for (ValuePair pair : cycle) {
             Set<Value> valuesToRemove = new HashSet<>(pair.tile.candidates());
             valuesToRemove.removeAll(pair.values);
@@ -102,45 +104,16 @@ public class HiddenPairSweep implements Sweep {
         }
     }
 
-    private static class Cycle implements Iterable<ValuePair> {
-        private CycleTileNode first;
-        private CycleTileNode last;
-
-        public Cycle(Pair pair) {
-            Iterator<Tile> iterator = pair.tiles.iterator();
-            this.first = new CycleTileNode(iterator.next());
-            this.last = new CycleTileNode(iterator.next());
-            CycleValueNode valueNode = new CycleValueNode(pair.matchingValue);
-            valueNode.setPrevious(this.first);
-            valueNode.setNext(this.last);
+    private static class TileCycle extends Cycle<Tile, Value, Pair, ValuePair> implements Iterable<ValuePair> {
+        public TileCycle(Pair pair) {
+            super(pair);
         }
 
-        private boolean isComplete() {
-            return first == last;
+        protected Set<Tile> getBoth(Pair pair) {
+            return pair.tiles;
         }
 
-        private boolean add(Pair pair) {
-            if (isComplete()) {
-                return false;
-            }
-            if (pair.tiles.contains(first.tile)) {
-                first.setPreviousValue(new CycleValueNode(pair.matchingValue));
-                Tile otherTile = getOtherTile(pair, first.tile);
-                first.previousValue.setPrevious((otherTile == last.tile) ? last : new CycleTileNode(otherTile));
-                first = first.previousValue.previous;
-                return true;
-            } else if (pair.tiles.contains(last.tile)) {
-                last.setNextValue(new CycleValueNode(pair.matchingValue));
-                Tile otherTile = getOtherTile(pair, last.tile);
-                last.nextValue.setNext((otherTile == first.tile) ? first : new CycleTileNode(otherTile));
-                last = last.nextValue.next;
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        private static Tile getOtherTile(Pair pair, Tile thatTile) {
+        protected Tile getOther(Pair pair, Tile thatTile) {
             for (Tile tile : pair.tiles) {
                 if (tile != thatTile) {
                     return tile;
@@ -149,70 +122,20 @@ public class HiddenPairSweep implements Sweep {
             throw new IllegalStateException("There was supposed to be another tile in the pair!");
         }
 
-        @Override
+        protected Value getGlue(Pair pair) {
+            return pair.matchingValue;
+        }
+
+        protected ValuePair createO(Value leftGlue, Tile value, Value rightGlue) {
+            return new ValuePair(value, Arrays.asList(leftGlue, rightGlue));
+        }
+
+        protected Pair createI(Tile leftValue, Value glue, Tile rightValue) {
+            return new Pair(glue, new HashSet<>(Arrays.asList(leftValue, rightValue)));
+        }
+
         public Iterator<ValuePair> iterator() {
-            if (!isComplete()) {
-                throw new IllegalStateException("This is not a complete cycle!");
-            }
-            return new MyIterator();
-        }
-
-        private class MyIterator implements Iterator<ValuePair> {
-            private CycleTileNode currentNode = first;
-            private boolean atStart = true;
-
-            @Override
-            public boolean hasNext() {
-                return atStart || (currentNode != last);
-            }
-
-            @Override
-            public ValuePair next() {
-                ValuePair pair = new ValuePair(currentNode.tile,
-                        Arrays.asList(currentNode.previousValue.value, currentNode.nextValue.value));
-                currentNode = currentNode.nextValue.next;
-                atStart = false;
-                return pair;
-            }
-        }
-
-        private static class CycleTileNode {
-            private final Tile tile;
-            private CycleValueNode previousValue;
-            private CycleValueNode nextValue;
-
-            public CycleTileNode(Tile tile) {
-                this.tile = Objects.requireNonNull(tile, "null tile in cycle");
-            }
-
-            public void setPreviousValue(CycleValueNode previousValue) {
-                this.previousValue = previousValue;
-                previousValue.next = this;
-            }
-
-            public void setNextValue(CycleValueNode nextValue) {
-                this.nextValue = nextValue;
-                nextValue.previous = this;
-            }
-        }
-        private static class CycleValueNode {
-            private final Value value;
-            private CycleTileNode previous;
-            private CycleTileNode next;
-
-            public CycleValueNode(Value value) {
-                this.value = Objects.requireNonNull(value, "null value in cycle");
-            }
-
-            public void setPrevious(CycleTileNode previous) {
-                this.previous = previous;
-                previous.nextValue = this;
-            }
-
-            public void setNext(CycleTileNode next) {
-                this.next = next;
-                next.previousValue = this;
-            }
+            return iteratorO();
         }
     }
 }
