@@ -1,36 +1,28 @@
 package cz.vlasec.sudoku.core.board;
 
+import cz.vlasec.sudoku.core.utils.BoardUtil;
+
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Board {
     private final Tile[][] grid;
-    private final Collection<Set<Tile>> tileSets;
-    private final Map<Tile, Collection<Set<Tile>>> tileSetsForTile;
+    private final List<TileSet> tileSets;
+    private final Map<Tile, List<TileSet>> tileSetsForTile;
+    private final Map<TileSet, List<TileSet>> intersectingTileSets;
 
-    private Board(Tile[][] grid, Collection<Set<Tile>> tileSets, Map<Tile, Collection<Set<Tile>>> tileSetsForTile) {
+    private Board(Tile[][] grid, List<TileSet> tileSets, Map<Tile, List<TileSet>> tileSetsForTile,
+                  Map<TileSet, List<TileSet>> intersectingTileSets) {
         this.grid = grid;
         this.tileSets = tileSets;
         this.tileSetsForTile = tileSetsForTile;
+        this.intersectingTileSets = intersectingTileSets;
     }
 
-    public static Board create(Tile[][] grid, Collection<Set<Tile>> tileSets) {
-        tileSets = tileSets.stream()
-                .map(HashSet::new)
-                .map(Collections::unmodifiableSet)
-                .collect(Collectors.toList());
-        return new Board(grid, tileSets, computeTileSetsForTile(tileSets));
-    }
-
-    private static Map<Tile, Collection<Set<Tile>>> computeTileSetsForTile(Collection<Set<Tile>> tileSets) {
-        Map<Tile, Collection<Set<Tile>>> result = new HashMap<>();
-        for (Set<Tile> tileSet : tileSets) {
-            for (Tile tile : tileSet) {
-                result.computeIfAbsent(tile, x -> new ArrayList<>())
-                        .add(tileSet);
-            }
-        }
-        return result;
+    public static Board create(Tile[][] grid, List<TileSet> tileSets) {
+        tileSets = Collections.unmodifiableList(tileSets);
+        return new Board(grid, tileSets, BoardUtil.computeTileSetsForTiles(tileSets), BoardUtil.computeIntersections(tileSets));
     }
 
     /**
@@ -40,14 +32,47 @@ public class Board {
         return grid[x][y];
     }
 
-    public Collection<Set<Tile>> setsAt(Tile tile) {
+    /**
+     * Returns sets that the tile is a part of.
+     */
+    public List<TileSet> setsAt(Tile tile) {
         return tileSetsForTile.getOrDefault(tile, Collections.emptyList());
+    }
+
+    public List<TileSet> intersectingSetsTo(TileSet tileSet) {
+        return intersectingTileSets.getOrDefault(tileSet, Collections.emptyList());
     }
 
     /**
      * Sets of tiles where no duplicates are allowed by the rules.
      */
-    public Collection<Set<Tile>> tileSets() {
+    public List<TileSet> tileSets() {
         return tileSets;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(lineRow());
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[0].length; j++) {
+                String display = String.format("| %s ", displayValueAt(i, j));
+                sb.append(display);
+            }
+            sb.append("|\n");
+            sb.append(lineRow());
+        }
+        return sb.toString();
+    }
+
+    private String displayValueAt(int x, int y) {
+        return grid[x][y] != null && grid[x][y].value() != null
+                ? grid[x][y].value().getDescription()
+                : " ";
+    }
+
+    private String lineRow() {
+        return Stream.generate(() -> "---").limit(grid[0].length)
+                        .collect(Collectors.joining("+", "+", "+\n"));
     }
 }

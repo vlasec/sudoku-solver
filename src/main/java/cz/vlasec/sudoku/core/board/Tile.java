@@ -3,10 +3,8 @@ package cz.vlasec.sudoku.core.board;
 import cz.vlasec.sudoku.core.board.Rules.Value;
 import cz.vlasec.sudoku.core.utils.CollectionFactory;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.function.BiConsumer;
 
 /**
  * A tile in the board. It is mutable as long as you have a reference to its mutator.
@@ -21,15 +19,16 @@ public class Tile {
         this.description = description;
     }
 
-    static TileMutator createTile(Collection<Value> initialCandidates, String description) {
+    public static TileMutator createTile(Collection<Value> initialCandidates, String description) {
         Tile tile = new Tile(description);
         tile.candidates = CollectionFactory.copyValuesSet(initialCandidates);
         return new TileMutator(tile);
     }
 
-    TileMutator copyTile() {
+    public TileMutator copyTile() {
         Tile copy = new Tile(description);
         copy.candidates = CollectionFactory.copyValuesSet(candidates);
+        copy.value = value;
         return new TileMutator(copy);
     }
 
@@ -61,12 +60,22 @@ public class Tile {
         return Objects.hash(description);
     }
 
+    @Override
+    public String toString() {
+        return description + "=" + (value != null ? value : "_") + " " + candidates;
+    }
+
     /** A mutator - basically a handle that allows mutation of the Tile. Ensures  */
     public static class TileMutator {
         private final Tile tile;
+        private List<BiConsumer<Tile, Value>> onRemove = new ArrayList<>();
 
         private TileMutator(Tile tile) {
             this.tile = tile;
+        }
+
+        public void setOnRemove(BiConsumer<Tile, Value> onRemove) {
+            this.onRemove.add(onRemove);
         }
 
         public Tile getTile() {
@@ -77,8 +86,11 @@ public class Tile {
             tile.value = newValue;
         }
 
-        public boolean removeCandidate(Value value) {
-            return tile.candidates.remove(value);
+        public void removeCandidate(Value exCandidate) {
+            tile.candidates.remove(exCandidate);
+            for (BiConsumer<Tile, Value> consumer : onRemove) {
+                consumer.accept(tile, exCandidate);
+            }
         }
     }
 }

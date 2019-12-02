@@ -13,21 +13,21 @@ public interface Reaction {
     /**
      * Reacts to a value being set to a tile.
      *
-     * @param callback Reactions being made by this solver component must be reported this way.
-     * @param board    The affected board.
-     * @param tile     The affected tile.
+     * @param callback     Reactions being made by this solver component must be reported this way.
+     * @param board        The affected board.
+     * @param affectedTile The affected tile.
+     * @param value        The value that was set.
      */
-    default void onValueSet(SolverCallback callback, Board board, Tile tile) {
+    default void onValueSet(SolverCallback callback, Board board, Tile affectedTile, Value value) {
     }
 
     /**
      * Reacts to a candidate being ruled out on the tile.
      *
-     * @param callback Reactions being made by this solver component must be reported this way.
-     * @param board    The affected board.
-     * @param tile     The affected tile.
-     * @param value    The value that was ruled out.
+     * @param callback     Reactions being made by this solver component must be reported this way.
+     * @param board        The affected board.
+     * @param affectedTile The affected tile.
+     * @param value        The value that was ruled out.
      */
-    default void onCandidateRuledOut(SolverCallback callback, Board board, Tile tile, Value value) {
-    }
+    void onCandidateRuledOut(SolverCallback callback, Board board, Tile affectedTile, Value value);
 }
