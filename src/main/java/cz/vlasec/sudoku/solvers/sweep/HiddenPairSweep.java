@@ -40,15 +40,7 @@ public class HiddenPairSweep implements Sweep {
         while (!pairs.isEmpty()) {
             TileCycle cycle = new TileCycle(pairs.removeFirst());
             while(true) {
-                boolean added = false;
-                for (Iterator<Pair> iterator = pairs.iterator(); iterator.hasNext(); ) {
-                    Pair pair = iterator.next();
-                    if (added = cycle.add(pair)) {
-                        iterator.remove();
-                        break;
-                    }
-                }
-                if (!added) {
+                if (!tryAdd(pairs, cycle)) {
                     break;
                 }
                 if (cycle.isComplete()) {
@@ -57,6 +49,17 @@ public class HiddenPairSweep implements Sweep {
                 }
             }
         }
+    }
+
+    private boolean tryAdd(LinkedList<Pair> pairs, TileCycle cycle) {
+        for (Iterator<Pair> iterator = pairs.iterator(); iterator.hasNext(); ) {
+            Pair pair = iterator.next();
+            if (cycle.add(pair)) {
+                iterator.remove();
+                return true;
+            }
+        }
+        return false;
     }
 
     private void clearForCycle(SweepRequest request, TileCycle cycle) {

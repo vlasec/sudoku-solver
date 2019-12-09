@@ -64,6 +64,19 @@ public class SamplePuzzles {
             "....36.4.",
     };
 
+    // at least they say so ... https://www.telegraph.co.uk/news/science/science-news/9359579/Worlds-hardest-sudoku-can-you-crack-it.html
+    static final String[] WORLDS_HARDEST = new String[] {
+            "8........",
+            "..36.....",
+            ".7..9.2..",
+            ".5...7...",
+            "....457..",
+            "...1...3.",
+            "..1....68",
+            "..85...1.",
+            ".9....4..",
+    };
+
     static final String[] EASY16 = new String[]{
             "..GB81.72..3E...",
             ".......9....3.5.",

@@ -12,6 +12,7 @@ import cz.vlasec.sudoku.solvers.reaction.LastInSetReaction;
 import cz.vlasec.sudoku.solvers.sweep.HiddenPairSweep;
 import cz.vlasec.sudoku.solvers.sweep.NakedPairSweep;
 import cz.vlasec.sudoku.solvers.sweep.SetIntersectionSweep;
+import cz.vlasec.sudoku.solvers.sweep.SwordfishSweep;
 
 import java.util.*;
 
@@ -27,21 +28,27 @@ public class ClassicSolver implements Solver {
             new SetIntersectionSweep(),
             new NakedPairSweep(),
             new HiddenPairSweep(),
+            new SwordfishSweep(),
     }));
 
     @Override
     public List<Board> solve(Board problem, Rules rules) {
-        Problem x = Problem.copyProblem(rules, problem);
+        Puzzle x = Puzzle.copyProblem(rules, problem);
         Statistics stats = new Statistics();
         StatefulSolver solver = new StatefulSolver(x, stats);
         solver.initialSweep();
-        List<Board> boards = solver.solve();
-        stats.writeStatistics();
-        return boards;
+        try {
+            List<Board> boards = solver.solve();
+            stats.writeStatistics();
+            return boards;
+        } catch (SudokuException ex) {
+            stats.writeStatistics();
+            throw ex;
+        }
     }
 
     private class StatefulSolver implements SolverCallback {
-        private final Problem problem;
+        private final Puzzle puzzle;
         private final Board board;
         private final Rules rules;
         private final Queue<Event> events = new LinkedList<>();
@@ -49,11 +56,16 @@ public class ClassicSolver implements Solver {
         private Object activeComponent;
         private int currentDepth = 0;
 
-        public StatefulSolver(Problem problem, Statistics stats) {
-            this.problem = problem;
-            this.board = problem.getBoard();
-            this.rules = problem.getRules();
+        public StatefulSolver(Puzzle puzzle, Statistics stats) {
+            this(puzzle, stats, 0);
+        }
+
+        public StatefulSolver(Puzzle puzzle, Statistics stats, int currentDepth) {
+            this.puzzle = puzzle;
+            this.board = puzzle.getBoard();
+            this.rules = puzzle.getRules();
             this.stats = stats;
+            this.currentDepth = currentDepth;
         }
 
         public List<Board> solve() {
@@ -81,7 +93,9 @@ public class ClassicSolver implements Solver {
         }
 
         public List<Board> splitUp() {
-
+            if (currentDepth == 1) {
+                System.out.println("Splitting with " + puzzle.unsolvedTiles() + " tiles unsolved.");
+            }
             int fittestSize = Integer.MAX_VALUE;
             int fittestX = 0, fittestY = 0;
             Tile fittestTile = null;
@@ -106,7 +120,7 @@ public class ClassicSolver implements Solver {
                 try {
                     // Saving some resources on split by using the current solver for the last part.
                     StatefulSolver solver = (i == fittestSize - 1) ? this
-                            : new StatefulSolver(Problem.copyProblem(rules, board), stats);
+                            : new StatefulSolver(Puzzle.copyProblem(rules, board), stats, currentDepth);
                     Object previousActiveComponent = activeComponent;
                     solver.activeComponent = "SplitUp";
                     solver.setValue(solver.board.tileAt(fittestX, fittestY), candidates.get(i));
@@ -143,9 +157,9 @@ public class ClassicSolver implements Solver {
 
         private void initialSweep() {
             activeComponent = "InitialSweep";
-            for (int i = 0; i < problem.getRules().xSize(); i++) {
-                for (int j = 0; j < problem.getRules().ySize(); j++) {
-                    Tile tile = problem.getBoard().tileAt(i, j);
+            for (int i = 0; i < puzzle.getRules().xSize(); i++) {
+                for (int j = 0; j < puzzle.getRules().ySize(); j++) {
+                    Tile tile = puzzle.getBoard().tileAt(i, j);
                     if (tile.value() != null) {
                         valueWasSet(tile, tile.value());
                     }
@@ -159,7 +173,7 @@ public class ClassicSolver implements Solver {
             if (tile.value() == value) {
                 return;
             }
-            problem.setValue(tile, value);
+            puzzle.setValue(tile, value);
             valueWasSet(tile, value);
         }
 
@@ -179,7 +193,7 @@ public class ClassicSolver implements Solver {
                     System.out.println("???");
                 }
                 stats.hitCounter(activeComponent).inc();
-                problem.removeCandidate(tile, exCandidate);
+                puzzle.removeCandidate(tile, exCandidate);
                 events.add(new Event(tile, exCandidate, EventType.RULE_OUT));
             }
         }

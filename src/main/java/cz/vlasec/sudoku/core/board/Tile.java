@@ -47,6 +47,7 @@ public class Tile {
         return Collections.unmodifiableSet(candidates);
     }
 
+    /** Equality only says that it is the same tile. Value and candidates aren't relevant. */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

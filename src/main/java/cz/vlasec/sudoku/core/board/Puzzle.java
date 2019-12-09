@@ -11,22 +11,22 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Problem as a whole - This object also has mutable access to tiles. The solver shouldn't give away the reference.
+ * Puzzle as a whole - This object also has mutable access to tiles. The solver shouldn't give away the reference.
  */
-public class Problem {
+public class Puzzle {
     private final Map<Tile, TileMutator> mutatorMap;
     private final Map<TileSet, TileSetMutator> setMutatorMap;
     private final Board board;
     private final Rules rules;
 
-    private Problem(Map<Tile, TileMutator> mutatorMap, Map<TileSet, TileSetMutator> setMutatorMap, Board board, Rules rules) {
+    private Puzzle(Map<Tile, TileMutator> mutatorMap, Map<TileSet, TileSetMutator> setMutatorMap, Board board, Rules rules) {
         this.mutatorMap = mutatorMap;
         this.setMutatorMap = setMutatorMap;
         this.board = board;
         this.rules = rules;
     }
 
-    public static Problem createProblem(Rules rules) {
+    public static Puzzle createProblem(Rules rules) {
         Map<Tile, TileMutator> mutatorMap = new HashMap<>();
         int xSize = rules.xSize();
         int ySize = rules.ySize();
@@ -40,10 +40,10 @@ public class Problem {
         }
         List<TileSetMutator> setMutators = rules.sets(tiles);
         Board board = Board.create(tiles, toTileSets(setMutators));
-        return new Problem(mutatorMap, toSetMutatorsMap(setMutators), board, rules);
+        return new Puzzle(mutatorMap, toSetMutatorsMap(setMutators), board, rules);
     }
 
-    public static Problem copyProblem(Rules rules, Board originalBoard) {
+    public static Puzzle copyProblem(Rules rules, Board originalBoard) {
         Map<Tile, TileMutator> mutatorMap = new HashMap<>();
         int xSize = rules.xSize();
         int ySize = rules.ySize();
@@ -57,7 +57,7 @@ public class Problem {
         }
         List<TileSetMutator> setMutators = rules.sets(tiles);
         Board board = Board.create(tiles, toTileSets(setMutators));
-        return new Problem(mutatorMap, toSetMutatorsMap(setMutators), board, rules);
+        return new Puzzle(mutatorMap, toSetMutatorsMap(setMutators), board, rules);
     }
 
     private static List<TileSet> toTileSets(List<TileSetMutator> setMutators) {
@@ -90,6 +90,9 @@ public class Problem {
     }
 
     public void setValue(Tile tile, Value value) {
+        if (value == null && tile.value() == null) {
+            return;
+        }
         if (!tile.candidates().contains(value)) {
             throw new SudokuStateException("A value that is not one of candidates was set to a tile", tile);
         }
@@ -129,5 +132,11 @@ public class Problem {
 
     public Rules getRules() {
         return rules;
+    }
+
+    public int unsolvedTiles() {
+        return (int) mutatorMap.keySet().stream()
+                .filter(tile -> tile.value() == null)
+                .count();
     }
 }

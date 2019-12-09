@@ -43,52 +43,18 @@ public class Board {
         return intersectingTileSets.getOrDefault(tileSet, Collections.emptyList());
     }
 
+    public int xSize() {
+        return grid.length;
+    }
+
+    public int ySize() {
+        return grid[0].length;
+    }
+
     /**
      * Sets of tiles where no duplicates are allowed by the rules.
      */
     public List<TileSet> tileSets() {
         return tileSets;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(lineRow());
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[0].length; j++) {
-                String display = String.format("| %s ", displayValueAt(i, j));
-                sb.append(display);
-            }
-            sb.append("|\n");
-            sb.append(lineRow());
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Only useful if values are length 1 strings
-     */
-    public String toUglyString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < grid.length; i++) {
-            sb.append("\"");
-            for (int j = 0; j < grid[0].length; j++) {
-                String display = String.format("%s", displayValueAt(i, j).replace(" ", "."));
-                sb.append(display);
-            }
-            sb.append("\",\n");
-        }
-        return sb.toString();
-    }
-
-    private String displayValueAt(int x, int y) {
-        return grid[x][y] != null && grid[x][y].value() != null
-                ? grid[x][y].value().getDescription()
-                : " ";
-    }
-
-    private String lineRow() {
-        return Stream.generate(() -> "---").limit(grid[0].length)
-                        .collect(Collectors.joining("+", "+", "+\n"));
     }
 }
