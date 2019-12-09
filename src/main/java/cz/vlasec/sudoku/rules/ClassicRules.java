@@ -36,7 +36,7 @@ public class ClassicRules extends Rules {
     public List<TileSetMutator> sets(Tile[][] grid) {
         List<TileSetMutator> result = new ArrayList<>(size * 3);
         prepareRowsAndCols(result, grid, ClassicSetTypes.ROW, ClassicSetTypes.COLUMN);
-        prepareCells(result, grid, ClassicSetTypes.COLUMN);
+        prepareCells(result, grid, ClassicSetTypes.CELL);
 
         return result;
     }
